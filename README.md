@@ -1,0 +1,1 @@
+# symfony-temp-file-bundle
