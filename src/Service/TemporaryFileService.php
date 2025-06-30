@@ -11,7 +11,7 @@ use Symfony\Contracts\Service\ResetInterface;
 /**
  * 有时候我们需要在过程中生成一些临时文件，为了防止忘记删除，我们在这里再做一次检测
  */
-#[AutoconfigureTag('as-coroutine')]
+#[AutoconfigureTag(name: 'as-coroutine')]
 class TemporaryFileService implements ResetInterface
 {
     /**
