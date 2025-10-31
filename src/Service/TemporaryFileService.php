@@ -3,19 +3,21 @@
 namespace Tourze\TempFileBundle\Service;
 
 use Symfony\Component\Console\ConsoleEvents;
+use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
 use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Contracts\Service\ResetInterface;
 
 /**
- * 有时候我们需要在过程中生成一些临时文件，为了防止忘记删除，我们在这里再做一次检测
+ * 有时候我们需要在过程中生成一些临时文件，为了防止忘记删除，我们在这里再做一次检测.
  */
 #[AutoconfigureTag(name: 'as-coroutine')]
+#[Autoconfigure(public: true)]
 class TemporaryFileService implements ResetInterface
 {
     /**
-     * @var array 临时文件列表
+     * @var array<string> 临时文件列表
      */
     private array $temporaryFiles = [];
 
@@ -25,13 +27,13 @@ class TemporaryFileService implements ResetInterface
     }
 
     /**
-     * 生成一个符合格式的临时文件名，同时这种生成的地址会在请求结束后自动清理
+     * 生成一个符合格式的临时文件名，同时这种生成的地址会在请求结束后自动清理.
      */
     public function generateTemporaryFileName(string $prefix, ?string $ext = null): string
     {
         $filename = tempnam(sys_get_temp_dir(), $prefix);
         if (null !== $ext) {
-            $filename .= ".$ext";
+            $filename .= ".{$ext}";
         }
         $this->addTemporaryFile($filename);
 
@@ -44,7 +46,7 @@ class TemporaryFileService implements ResetInterface
     #[AsEventListener(event: ConsoleEvents::ERROR, priority: -100)]
     public function onTerminated(): void
     {
-        while (!empty($this->temporaryFiles)) {
+        while (count($this->temporaryFiles) > 0) {
             $file = array_shift($this->temporaryFiles);
             @unlink($file);
         }

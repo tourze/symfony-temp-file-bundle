@@ -2,21 +2,31 @@
 
 namespace Tourze\TempFileBundle\Tests\Service;
 
-use PHPUnit\Framework\TestCase;
-use ReflectionClass;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use Tourze\PHPUnitSymfonyKernelTest\AbstractEventSubscriberTestCase;
 use Tourze\TempFileBundle\Service\TemporaryFileService;
 
-class TemporaryFileServiceTest extends TestCase
+/**
+ * @internal
+ */
+#[CoversClass(TemporaryFileService::class)]
+#[RunTestsInSeparateProcesses]
+final class TemporaryFileServiceTest extends AbstractEventSubscriberTestCase
 {
     private TemporaryFileService $service;
+
+    /**
+     * @var array<string>
+     */
     private array $testFiles = [];
 
-    protected function setUp(): void
+    protected function onSetUp(): void
     {
-        $this->service = new TemporaryFileService();
+        $this->service = self::getService(TemporaryFileService::class);
     }
 
-    protected function tearDown(): void
+    protected function onTearDown(): void
     {
         // 清理测试中创建的临时文件
         foreach ($this->testFiles as $file) {
@@ -27,14 +37,14 @@ class TemporaryFileServiceTest extends TestCase
     }
 
     /**
-     * 测试添加临时文件功能
+     * 测试添加临时文件功能.
      */
     public function testAddTemporaryFile(): void
     {
         $tempFile = '/tmp/test_file.txt';
 
         // 通过反射访问私有属性
-        $reflection = new ReflectionClass(TemporaryFileService::class);
+        $reflection = new \ReflectionClass(TemporaryFileService::class);
         $property = $reflection->getProperty('temporaryFiles');
         $property->setAccessible(true);
 
@@ -49,7 +59,7 @@ class TemporaryFileServiceTest extends TestCase
     }
 
     /**
-     * 测试生成临时文件名功能（无扩展名）
+     * 测试生成临时文件名功能（无扩展名）.
      */
     public function testGenerateTemporaryFileNameWithoutExtension(): void
     {
@@ -63,16 +73,17 @@ class TemporaryFileServiceTest extends TestCase
         $this->assertStringContainsString($prefix, basename($tempFileName));
 
         // 验证文件是否被添加到临时文件列表
-        $reflection = new ReflectionClass(TemporaryFileService::class);
+        $reflection = new \ReflectionClass(TemporaryFileService::class);
         $property = $reflection->getProperty('temporaryFiles');
         $property->setAccessible(true);
+        /** @var array<string> $files */
         $files = $property->getValue($this->service);
 
         $this->assertContains($tempFileName, $files);
     }
 
     /**
-     * 测试生成临时文件名功能（带扩展名）
+     * 测试生成临时文件名功能（带扩展名）.
      */
     public function testGenerateTemporaryFileNameWithExtension(): void
     {
@@ -84,14 +95,14 @@ class TemporaryFileServiceTest extends TestCase
         $this->testFiles[] = $tempFileName;
 
         // 验证生成的文件名是否具有正确的扩展名
-        $this->assertStringEndsWith(".$extension", $tempFileName);
+        $this->assertStringEndsWith(".{$extension}", $tempFileName);
 
         // 验证生成的文件名是否包含前缀
         $this->assertStringContainsString($prefix, basename($tempFileName));
     }
 
     /**
-     * 测试临时文件清理功能
+     * 测试临时文件清理功能.
      */
     public function testOnTerminated(): void
     {
@@ -113,7 +124,7 @@ class TemporaryFileServiceTest extends TestCase
     }
 
     /**
-     * 测试重置功能
+     * 测试重置功能.
      */
     public function testReset(): void
     {
@@ -121,7 +132,7 @@ class TemporaryFileServiceTest extends TestCase
         $this->service->addTemporaryFile('/tmp/some_file.txt');
 
         // 通过反射访问私有属性
-        $reflection = new ReflectionClass(TemporaryFileService::class);
+        $reflection = new \ReflectionClass(TemporaryFileService::class);
         $property = $reflection->getProperty('temporaryFiles');
         $property->setAccessible(true);
 
@@ -134,4 +145,4 @@ class TemporaryFileServiceTest extends TestCase
         // 验证列表已清空
         $this->assertSame([], $property->getValue($this->service));
     }
-} 
+}

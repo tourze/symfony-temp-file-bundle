@@ -1,7 +1,12 @@
 # symfony-temp-file-bundle
 
-[![Latest Stable Version](https://img.shields.io/packagist/v/tourze/symfony-temp-file-bundle.svg)](https://packagist.org/packages/tourze/symfony-temp-file-bundle)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[English](README.md) | [中文](README.zh-CN.md)
+
+[![Latest Stable Version](https://img.shields.io/packagist/v/tourze/symfony-temp-file-bundle.svg?style=flat-square)](https://packagist.org/packages/tourze/symfony-temp-file-bundle)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](LICENSE)
+[![PHP Version](https://img.shields.io/badge/php-%3E%3D8.1-8892BF.svg?style=flat-square)](https://php.net/)
+[![Symfony Version](https://img.shields.io/badge/symfony-%3E%3D6.4-000000.svg?style=flat-square)](https://symfony.com/)
+[![Code Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen.svg?style=flat-square)](https://github.com/tourze/php-monorepo/tree/master/packages/symfony-temp-file-bundle)
 
 ## 简介
 
@@ -9,10 +14,12 @@
 
 ## 功能特性
 
-- 统一管理临时文件的生成与删除
-- 支持 HTTP 请求和 Console 命令的生命周期自动清理
-- 简单易用的 API
-- 自动集成，无需复杂配置
+- **统一的临时文件管理**：集中化的临时文件创建和删除
+- **自动清理**：在 HTTP 请求和控制台命令结束时自动删除文件
+- **多种事件监听**：支持 `KernelEvents::TERMINATE`、`KernelEvents::EXCEPTION`、`ConsoleEvents::TERMINATE`、`ConsoleEvents::ERROR`
+- **简单的 API**：易于使用的方法来生成和管理临时文件
+- **零配置**：开箱即用，无需复杂设置
+- **内存高效**：使用数组移位管理文件清理
 
 ## 安装说明
 
@@ -51,14 +58,48 @@ file_put_contents($tempFile, 'hello world');
 ### 添加已有临时文件以便自动清理
 
 ```php
+// 注册现有文件以便自动清理
 $temporaryFileService->addTemporaryFile($filePath);
 ```
 
-## 详细文档
+### 生成无扩展名的临时文件
 
-- 所有生成或注册的临时文件会在 HTTP 请求或 Console 命令结束时自动清理。
-- 支持多种事件监听：`KernelEvents::TERMINATE`、`KernelEvents::EXCEPTION`、`ConsoleEvents::TERMINATE`、`ConsoleEvents::ERROR`
-- 无需手动清理临时文件，减少资源泄漏风险。
+```php
+// 生成无扩展名的临时文件
+$tempFile = $temporaryFileService->generateTemporaryFileName('data_');
+// 将创建类似的文件：/tmp/data_abc123
+```
+
+## API 文档
+
+### TemporaryFileService
+
+#### 方法
+
+- `generateTemporaryFileName(string $prefix, ?string $ext = null): string`
+  - 生成带有可选扩展名的临时文件名
+  - 文件会自动注册以便清理
+  - 返回临时文件的完整路径
+
+- `addTemporaryFile(string $file): void`
+  - 注册现有文件以便自动清理
+  - 适用于在服务外部创建的文件
+
+- `reset(): void`
+  - 手动清空临时文件列表
+  - 通常由事件监听器自动调用
+
+#### 事件监听器
+
+服务会在以下事件中自动清理临时文件：
+- `KernelEvents::TERMINATE` - 正常 HTTP 请求终止
+- `KernelEvents::EXCEPTION` - HTTP 请求异常
+- `ConsoleEvents::TERMINATE` - 控制台命令终止
+- `ConsoleEvents::ERROR` - 控制台命令错误
+
+#### 配置
+
+无需配置。当 Bundle 安装时，服务会自动注册和配置。
 
 ## 贡献指南
 
